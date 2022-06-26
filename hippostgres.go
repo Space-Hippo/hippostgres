@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Space-Hippo/ocelogger"
 	"log"
 )
 
@@ -11,13 +12,13 @@ func PostgresUpdateColumnDataOneRow(db *sql.DB, query string, params ...interfac
 	log.Printf("Query: %s", query)
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		log.Println(err)
+		ocelogger.Error(err)
 		return err
 	}
 	results, err := stmt.Exec(params...)
 	err = getRowsAffected(results, 1)
 	if err != nil {
-		log.Println(err)
+		ocelogger.Error(err)
 		return err
 	}
 	return nil
@@ -28,10 +29,10 @@ func PostgresScanOneRow(db *sql.DB, query string, params ...interface{}) (*sql.R
 		noParamsErr := errors.New("no params were passed")
 		return nil, noParamsErr
 	}
-	log.Println("Query", query)
+	ocelogger.Infof("Query", query)
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		log.Println(err)
+		ocelogger.Error(err)
 		return nil, err
 	}
 	row := stmt.QueryRow(params...)
@@ -43,14 +44,14 @@ func PostgresScanRows(db *sql.DB, query string, params ...interface{}) (*sql.Row
 		noParamsErr := errors.New("no params were passed")
 		return nil, noParamsErr
 	}
-	log.Printf("Query %v", query)
+	ocelogger.Infof("Query %v", query)
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return nil, err
 	}
 	rows, err := stmt.Query(params...)
 	if err != nil {
-		log.Println(err)
+		ocelogger.Error(err)
 		return nil, err
 	}
 	return rows, nil
@@ -65,7 +66,7 @@ func getRowsAffected(results sql.Result, targetNumRowsAffected int64) error {
 	}
 	if rowsAffected != targetNumRowsAffected {
 		sqlErr := errors.New(fmt.Sprintf("number of rows affected does not match the expected number of rows affected: %v / %v", rowsAffected, targetNumRowsAffected))
-		log.Println(sqlErr)
+		ocelogger.Error(sqlErr)
 		return sqlErr
 	}
 	log.Printf("Rows affected: %v / %v", rowsAffected, targetNumRowsAffected)
